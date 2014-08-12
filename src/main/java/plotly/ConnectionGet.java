@@ -168,7 +168,12 @@ public class ConnectionGet {
 				// TODO Give values to the above from the returned buffer br which in 
 				// json format. And judge if there are msg or error. http://json.org/java/
 				
-				System.out.println("Json Msg:" + fullOutPut);
+				// System.out.println("Json Msg:" + fullOutPut);
+				// TODO Return the msg to the iplant UI
+				Response res = new Response(fullOutPut);
+				// Convert String to Json.
+				res.ConvertoJson();
+				System.out.println(res.getURL());
 				
 			} catch (MalformedURLException e) {
 				e.printStackTrace();

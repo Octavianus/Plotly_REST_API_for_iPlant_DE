@@ -19,10 +19,6 @@ public class UserData {
 	private String SelectingFile;
 	private String outPutFile;
 	
-	String urlParameters2 = "un=david90test&key=5afprolg26&origin=plot&"
-			+ "platform=Java&args=[[0, 1, 2], [3, 4, 5], [1, 2, 3], [6, 6, 5]]&"
-			+ "kwargs={\"filename\": \"plot from api\",\"fileopt\": \"overwrite\",\"style\": {\"type\": \"bar\"},\"traces\": [1],\"layout\": {\"title\": \"experimental data\"},\"world_readable\": true}";
-	
 	// New User
 	private String username = "un=";
 	private String email = "email=";
@@ -232,18 +228,32 @@ public class UserData {
 		CSVReader reader = new CSVReader( new FileReader(out));
 		List<String[]> rs = reader.readAll();
 		String[] header = rs.get(0);
+
 		
-		String urlParameters2 = "un=david90test&key=5afprolg26&origin=plot&"
+		/* Thi is the example to plot a char./ String urlParameters2 = "un=david90test&key=5afprolg26&origin=plot&"
 				+ "platform=Java"
 				+ "&args=[[0, 1, 2], [3, 4, 5], [1, 2, 3], [6, 6, 5]]&"
 				+ "kwargs={\"filename\": \"plot from api\",\"fileopt\": \"overwrite\",\"style\": {\"type\": \"bar\"},\"traces\": [1],\"layout\": {\"title\": \"experimental data\"},\"world_readable\": true}";
+		/*/
 		
+
+		// Got the data from csv file
+		String xdata = "";
 		
-		String prefix_data = username +"&"+ api_key + "&" + email +"&" + origin + "&" + platform;
-		//String data 
-		//String butt_data = 
+		String ydata = "";
 		
-		return urlParameters2;
+		String zdata = "";
+		
+	
+		// TODO filename, xaxis, yaxis, tile of the graph should be collected from the user.
+		// data like fileopt in the kwargs should be by default for now.
+	
+		String prefix_data = username +"&"+ api_key +"&" + origin + "&" + platform + "&";
+		String data = "args=[{\"z\":[[9,10,10,9],[7,8,4,2]],\"x\":[\"sample1\",\"sample2\",\"sample3\",\"sample4\"],\"y\":[\"AA\",\"BB\",\"CC\"],\"name\":\"example\",\"type\":\"heatmap\"}]" + "&";
+		String butt_data = "kwargs={\"filename\":\"plot from api\", \"fileopt\":\"overwrite\", \"style\":{\"type\":\"heatmap\"},\"layout\":{\"title\":\"heatmap\"},\"world_readable\":true}"; 
+		URLParameters = prefix_data + data + butt_data;
+		
+		return URLParameters;
 	}
 	
 
