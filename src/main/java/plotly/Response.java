@@ -8,6 +8,7 @@ public class Response {
 	private String res = null;
 	private JSONObject JsonRes = null;
 	private String errMsg = null;
+	private String WarnMsg = null;
 	private String url = null;
 	private String msg = null;
 	
@@ -22,6 +23,11 @@ public class Response {
 
 	public Response(String res){
 		this.res = res;
+	}
+	
+	public String getWarnMsg(){
+		this.WarnMsg = JsonRes.getString("warning");
+		return this.WarnMsg;
 	}
 	
 	public String getError(){

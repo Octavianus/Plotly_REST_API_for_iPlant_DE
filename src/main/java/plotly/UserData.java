@@ -11,6 +11,7 @@ import java.util.List;
 import static java.util.Arrays.asList;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
+import au.com.bytecode.opencsv.bean.ColumnPositionMappingStrategy;
 import net.sf.json.*;
 
 public class UserData {
@@ -31,16 +32,23 @@ public class UserData {
 	private String api_key = "key=5afprolg26";
 	// origin = plot as default
 	private String origin = "origin=plot";
-	private String args = "args=";
-	private String kwargs = "kwargs=";
+	private String args = "args=[{";
+	private String kwargs = "kwargs={\"filename\":\"";
 	private String url = "";
-	private String message = "";
-	private String warning = "Warning message: ";
-	private String error = "Error message: ";
 	private String filename = "";
+	private String plottype = "";
+	private String plottitle = "";
+
+	private List<String> samplesName = asList("sampleNO.1","sampleNO.2");
+	
+	// set the threshold of the raw data.
+	private int threshold = 0;
+	private int columnofValues = 0;
+	private int columnsBeforeValues = 1;
 	
 	/* 
 	 * The followings set up all the parameters.
+	 * The getXXX() seems redundant now, we'll see.
 	 */
 	public UserData() {
 	}
@@ -109,12 +117,29 @@ public class UserData {
 		return this.tmp_pw;
 	}
 	
-	/*	Get Set
-	 *  private String message = "";
-	 *	private String warning = "Warning message: ";
-	 *	private String error = "Error message: ";
-	 *	private String filename = "";
-	 */
+	public void setFilename(String filename){
+		this.filename = filename;
+	}
+
+	public void setPlotType(String plottype){
+		this.plottype = plottype;
+	}
+	
+	public void setPlotTitle(String plottitle){
+		this.plottitle = plottitle;
+	}
+
+	public void setThreshold(int threshold){
+		this.threshold = threshold;
+	}
+
+	public void setColumnofValues(int columnofValues){
+		this.columnofValues = columnofValues;
+	}
+	
+	public int getColumnofValues(){
+		return this.columnofValues;
+	}
 	
 	/* 
 	 * save the columns which are selecting into a temp file
@@ -122,10 +147,12 @@ public class UserData {
 	public void select(String in, String out) throws Exception{
 		try {
 			// Try to read the CSV files locally.
-			// TODO Read from iRODS and UI
+			// TODO Read from iRODS and UI, and THIS IS FOR THE TREATED DATA
+			// TODO HOW AHOUT THE RAW DATA.
 			String sig = "significant";
+			int columnofValues = 0;
 			
-			List<String> selectingColumn = asList("gene","sample_1","sample_2","value_1","value_2","significant");
+			List<String> selectingColumn = asList("gene","value_1","value_2");
 			List<Integer> indexofSelectingColumns = new ArrayList<Integer>();
 			
 			CSVReader reader = new CSVReader(new FileReader(in));
@@ -134,6 +161,19 @@ public class UserData {
 			List<String[]> rs = reader.readAll();
 			// Get the header of the file, and check the significant field.
 			String[] header = rs.get(0);
+			
+			// Set the number of selecting values in a raw or treated file.
+			Iterator<String> it = selectingColumn.iterator();
+			int tmpWalker = 0;
+			while(tmpWalker < columnsBeforeValues){
+				it.next();
+				tmpWalker ++;
+			}
+			while(it.hasNext()){
+					columnofValues++;
+					it.next();
+			}
+			setColumnofValues(columnofValues);
 			
 			// If there is a column marks the significant, filter the rows that are
 			// not significant in order to save the executing time.
@@ -167,9 +207,9 @@ public class UserData {
 				 * Record the index of all the selecting columns.
 				 */
 				
-				Iterator<String> it = selectingColumn.iterator();
-				while(it.hasNext()){
-					if(header[indexofHeader].matches(it.next()))
+				Iterator<String> it1 = selectingColumn.iterator();
+				while(it1.hasNext()){
+					if(header[indexofHeader].matches(it1.next()))
 						indexofSelectingColumns.add(indexofHeader);
 				}
 				
@@ -183,13 +223,13 @@ public class UserData {
 			List<String[]> outputFile = new ArrayList<String[]>();
 			while(indexofRows < rs.size())
 			{
-				Iterator<Integer> it = indexofSelectingColumns.iterator();
+				Iterator<Integer> it1 = indexofSelectingColumns.iterator();
 				String[] entries;
 				String oneLine = "";
-				while(it.hasNext())
+				while(it1.hasNext())
 				{
-					oneLine += rs.get(indexofRows)[it.next()];
-					if(it.hasNext())
+					oneLine += rs.get(indexofRows)[it1.next()];
+					if(it1.hasNext())
 						oneLine += "#";
 				}
 				
@@ -229,8 +269,8 @@ public class UserData {
 		List<String[]> rs = reader.readAll();
 		String[] header = rs.get(0);
 
-		
-		/* Thi is the example to plot a char./ String urlParameters2 = "un=david90test&key=5afprolg26&origin=plot&"
+		/* This is the example to plot a char./
+				String urlParameters2 = "un=david90test&key=5afprolg26&origin=plot&"
 				+ "platform=Java"
 				+ "&args=[[0, 1, 2], [3, 4, 5], [1, 2, 3], [6, 6, 5]]&"
 				+ "kwargs={\"filename\": \"plot from api\",\"fileopt\": \"overwrite\",\"style\": {\"type\": \"bar\"},\"traces\": [1],\"layout\": {\"title\": \"experimental data\"},\"world_readable\": true}";
@@ -238,24 +278,66 @@ public class UserData {
 		
 
 		// Got the data from csv file
-		String xdata = "";
+		// the default yaxis data is from gene, the index is 1.
+		// the zaxis data will be specified by user
+		// the default xaxis data is the following columns, which after the gene col.
+		int indexofYaxis = 0;
 		
-		String ydata = "";
+		String xdata = "\"x\":[";	
+		String ydata = "\"y\":[";
+		String zdata = "\"z\":[";
 		
-		String zdata = "";
+		// Set y and z data.
+		int indexofRows = 1; // Jump over the header row.
+		while(indexofRows < rs.size())
+		{
+			zdata += "[";	
+			int tmpWalker = 0;
+			while(tmpWalker < getColumnofValues()){
+				if(tmpWalker + 1 == getColumnofValues()){
+					zdata += rs.get(indexofRows)[tmpWalker + columnsBeforeValues] + "],";
+				}else
+					zdata += rs.get(indexofRows)[tmpWalker + columnsBeforeValues] + ",";
+				tmpWalker++;
+			}
+			
+			
+			if(indexofRows + 1 == rs.size()){
+				ydata += "\"" + rs.get(indexofRows)[indexofYaxis] + "\"],";
+				zdata = zdata.substring(0, zdata.length() -1);
+				zdata += "],";
+			}else{
+				ydata += "\"" + rs.get(indexofRows)[indexofYaxis] + "\",";
+			}
+			indexofRows ++;
+		}
 		
-	
+		// Set x data
+		int tmpWalker = 0;
+		while(tmpWalker < samplesName.size()){
+			if(tmpWalker + 1 == samplesName.size())
+			{
+				xdata += "\"" + samplesName.get(tmpWalker) + "\"";
+				xdata += "],";
+			}else
+				xdata += "\"" + samplesName.get(tmpWalker) + "\",";
+			tmpWalker ++;
+		}
+		
+		String prefix_data = username + "&" + api_key +"&" + origin + "&" + platform + "&";
+		args += zdata + xdata + ydata + "\"name\":\"example\",\"type\":\"" + plottype + "\"}]" + "&";
+		kwargs += filename + "\",\"fileopt\":\"overwrite\", \"style\":{\"type\":\"" 
+				+ plottype + "\"},\"layout\":{\"title\":\"" 
+				+ plottitle + "\"},\"world_readable\":true}";
+			
+		//data += xdata + ydata + zdata;
+		
 		// TODO filename, xaxis, yaxis, tile of the graph should be collected from the user.
 		// data like fileopt in the kwargs should be by default for now.
 	
-		String prefix_data = username +"&"+ api_key +"&" + origin + "&" + platform + "&";
-		String data = "args=[{\"z\":[[9,10,10,9],[7,8,4,2]],\"x\":[\"sample1\",\"sample2\",\"sample3\",\"sample4\"],\"y\":[\"AA\",\"BB\",\"CC\"],\"name\":\"example\",\"type\":\"heatmap\"}]" + "&";
-		String butt_data = "kwargs={\"filename\":\"plot from api\", \"fileopt\":\"overwrite\", \"style\":{\"type\":\"heatmap\"},\"layout\":{\"title\":\"heatmap\"},\"world_readable\":true}"; 
-		URLParameters = prefix_data + data + butt_data;
+		//String data = "args=[{\"z\":[[9,10,10,9],[7,8,4,2]],\"x\":[\"sample1\",\"sample2\",\"sample3\",\"sample4\"],\"y\":[\"AA\",\"BB\",\"CC\"],\"name\":\"example\",\"type\":\"heatmap\"}]" + "&"; 
+		URLParameters = prefix_data + args + kwargs;
 		
 		return URLParameters;
 	}
-	
-
-
 }

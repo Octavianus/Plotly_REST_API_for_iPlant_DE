@@ -36,6 +36,12 @@ public class ConnectionGet {
 			String platform = "java";
 			String outPutFile = "plots.csv";
 			String SelectingFile = "gene_exp.csv";
+			String filename = "plot from api";
+			String plottitle = "a heat map example";
+			// TODO Extend to other plot type
+			// Now the default plot type is heatmap
+			String plottype = "heatmap";
+			
 			
 			ConnectionGet conn = new ConnectionGet(un, email, platform);
 			
@@ -43,6 +49,9 @@ public class ConnectionGet {
 			getPara.setEmail(email);
 			getPara.setUsername(un);
 			getPara.setPlatform(platform);
+			getPara.setFilename(filename);
+			getPara.setPlotType(plottype);
+			getPara.setPlotTitle(plottitle);
 			
 			// Test 1 -- for new user
 			String urlParameters1 = getPara.getURLParemeters();
