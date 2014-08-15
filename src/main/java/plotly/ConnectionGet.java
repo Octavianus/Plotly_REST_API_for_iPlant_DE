@@ -16,41 +16,31 @@ import java.util.List;
 
 public class ConnectionGet {
 
-		private String un = "";
-		private String platform = "";
-		private String email = "";
-		
 		public ConnectionGet(){
-		}
-		
-		// this data already given by iplant if only one user
-		public ConnectionGet(String un, String email, String platform) {
-			this.un = un;
-			this.email = email;
-			this.platform = platform;
 		}
 		
 		public static void main(String[] args) throws Exception{
 			// Constructor of the connection
 			// TODO get the data from UI
-			// If given by iplant, only one account.
+			// un, email and platform is set as an example here
 			String un = "david90test";
 			String email = "wxdsdtc@gmail.com";
 			String platform = "java";
+			
 			String outPutFile = "plots.csv";
 			String SelectingFile = "gene_exp.csv";
 			String filename = "plot from api";
 			String plottitle = "a heat map example";
-			// TODO devide the string by "," or " "
 			String selectingColumn = "gene,value_1,value_2";
 			// TODO Extend to other plot type
 			// Now the default plot type is heatmap, threshold is 50
 			String plottype = "heatmap";
+			// Threshold is the sum of all the samples' value.
 			double threshold = 50;
 			
 			String fullOutput = "";
 			
-			ConnectionGet conn = new ConnectionGet(un, email, platform);
+			ConnectionGet conn = new ConnectionGet();
 			
 			UserData getPara = new UserData();
 			getPara.setEmail(email);
@@ -126,8 +116,7 @@ public class ConnectionGet {
 				String returnMsg = "";
 				String tmp_pw = "";
 				String key = "";
-				String api_key = "";
-				// TODO Give values to the above from the returned buffer br which in 
+				String api_key = ""; 
 				// json format. And judge if there are msg or error. 
 				
 			} catch (MalformedURLException e) {

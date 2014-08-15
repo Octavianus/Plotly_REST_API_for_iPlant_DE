@@ -55,8 +55,12 @@ public class UserData {
 	public UserData() {
 	}
 	
-	public UserData(String SelectingFile) {
-		this.SelectingFile = SelectingFile;
+	public UserData(String username) {
+		this.username = username;
+	}
+	
+	public void setSelectingFile(String selectingFile){
+		this.SelectingFile = selectingFile;
 	}
 	
 	public String getSelectingFile(){
@@ -189,7 +193,7 @@ public class UserData {
 			
 			// TODO user could choice if they need to filter the insignificant rows. 
 			// Reduce disk I/O by editing the file in the RAM all the time.
-			// Fileter the raw or un-raw data here
+			// Filter the raw or un-raw data here
 			int indexofHeader = 0;
 			boolean removeInsig = true;
 			while(indexofHeader < header.length){
@@ -218,7 +222,7 @@ public class UserData {
 							tmpWalker2 ++;
 						}
 						
-						if(rs.get(indexofRows)[indexofHeader].matches("no") || sampleValue < 50){
+						if(rs.get(indexofRows)[indexofHeader].matches("no") || sampleValue > 50){
 							// System.out.println(rs.remove(indexofRows));
 							rs.remove(indexofRows);
 							// -- Tricky bug since the size has been trimmed.
