@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -38,11 +39,12 @@ public class UserData {
 	private String filename = "";
 	private String plottype = "";
 	private String plottitle = "";
-
+	private String selectingColumns = "";
+		
 	private List<String> samplesName = asList("sampleNO.1","sampleNO.2");
 	
 	// set the threshold of the raw data.
-	private int threshold = 0;
+	private double threshold = 0;
 	private int columnofValues = 0;
 	private int columnsBeforeValues = 1;
 	
@@ -129,16 +131,20 @@ public class UserData {
 		this.plottitle = plottitle;
 	}
 
-	public void setThreshold(int threshold){
+	public void setThreshold(double threshold){
 		this.threshold = threshold;
 	}
 
 	public void setColumnofValues(int columnofValues){
 		this.columnofValues = columnofValues;
 	}
-	
+
 	public int getColumnofValues(){
 		return this.columnofValues;
+	}
+
+	public void setSelectingColumns(String selectingColumns){
+		this.selectingColumns = selectingColumns;
 	}
 	
 	/* 
@@ -152,8 +158,10 @@ public class UserData {
 			String sig = "significant";
 			int columnofValues = 0;
 			
-			List<String> selectingColumn = asList("gene","value_1","value_2");
 			List<Integer> indexofSelectingColumns = new ArrayList<Integer>();
+			// parse the user input into list.
+			// The code below splits the string on a delimiter defined as: zero or more whitespace, a literal comma, zero or more whitespace which will place the words into the list and collapse any whitespace between the words and commas.
+			List<String> selectingColumns_List = Arrays.asList(selectingColumns.split("\\s*,\\s*"));
 			
 			CSVReader reader = new CSVReader(new FileReader(in));
 			CSVWriter writer = new CSVWriter(new FileWriter(out));
@@ -163,7 +171,7 @@ public class UserData {
 			String[] header = rs.get(0);
 			
 			// Set the number of selecting values in a raw or treated file.
-			Iterator<String> it = selectingColumn.iterator();
+			Iterator<String> it = selectingColumns_List.iterator();
 			int tmpWalker = 0;
 			while(tmpWalker < columnsBeforeValues){
 				it.next();
@@ -181,18 +189,36 @@ public class UserData {
 			
 			// TODO user could choice if they need to filter the insignificant rows. 
 			// Reduce disk I/O by editing the file in the RAM all the time.
+			// Fileter the raw or un-raw data here
 			int indexofHeader = 0;
 			boolean removeInsig = true;
 			while(indexofHeader < header.length){
+				
+				/*
+				 * Record the index of all the selecting columns.
+				 */
+				Iterator<String> it1 = selectingColumns_List.iterator();
+				while(it1.hasNext()){
+					if(header[indexofHeader].matches(it1.next()))
+						indexofSelectingColumns.add(indexofHeader);
+				}
+				
 				/*
 				 * Select the rows here
 				 */
-				if(header[indexofHeader].matches(sig) && removeInsig)
+				if(header[indexofHeader].matches(sig) && (removeInsig || threshold != 0))
 				{
 					// Scan start from the data, remove the rows that are insignificant.
 					int indexofRows = 1;
 					while(indexofRows < rs.size()){
-						if(rs.get(indexofRows)[indexofHeader].matches("no")){
+						int tmpWalker2 = 0;
+						double sampleValue = 0;
+						while(tmpWalker2 < columnofValues){
+							sampleValue += Double.parseDouble((rs.get(indexofRows)[tmpWalker2 + indexofSelectingColumns.get(1)]));
+							tmpWalker2 ++;
+						}
+						
+						if(rs.get(indexofRows)[indexofHeader].matches("no") || sampleValue < 50){
 							// System.out.println(rs.remove(indexofRows));
 							rs.remove(indexofRows);
 							// -- Tricky bug since the size has been trimmed.
@@ -201,16 +227,6 @@ public class UserData {
 						}
 						indexofRows ++;
 					}
-				}
-				
-				/*
-				 * Record the index of all the selecting columns.
-				 */
-				
-				Iterator<String> it1 = selectingColumn.iterator();
-				while(it1.hasNext()){
-					if(header[indexofHeader].matches(it1.next()))
-						indexofSelectingColumns.add(indexofHeader);
 				}
 				
 				indexofHeader ++;
@@ -276,7 +292,6 @@ public class UserData {
 				+ "kwargs={\"filename\": \"plot from api\",\"fileopt\": \"overwrite\",\"style\": {\"type\": \"bar\"},\"traces\": [1],\"layout\": {\"title\": \"experimental data\"},\"world_readable\": true}";
 		/*/
 		
-
 		// Got the data from csv file
 		// the default yaxis data is from gene, the index is 1.
 		// the zaxis data will be specified by user
@@ -287,7 +302,8 @@ public class UserData {
 		String ydata = "\"y\":[";
 		String zdata = "\"z\":[";
 		
-		// Set y and z data.
+		// Set y and z data in the plotly REST API format.
+		// https://plot.ly/rest/
 		int indexofRows = 1; // Jump over the header row.
 		while(indexofRows < rs.size())
 		{
@@ -301,13 +317,19 @@ public class UserData {
 				tmpWalker++;
 			}
 			
+			// Check the sannity of the input file name
+			String geneName = "";
+			if(rs.get(indexofRows)[indexofYaxis].startsWith("-"))
+				geneName = "untitle";
+			else
+				geneName = rs.get(indexofRows)[indexofYaxis];
 			
 			if(indexofRows + 1 == rs.size()){
-				ydata += "\"" + rs.get(indexofRows)[indexofYaxis] + "\"],";
+				ydata += "\"" + geneName + "\"],";
 				zdata = zdata.substring(0, zdata.length() -1);
 				zdata += "],";
 			}else{
-				ydata += "\"" + rs.get(indexofRows)[indexofYaxis] + "\",";
+				ydata += "\"" + geneName + "\",";
 			}
 			indexofRows ++;
 		}

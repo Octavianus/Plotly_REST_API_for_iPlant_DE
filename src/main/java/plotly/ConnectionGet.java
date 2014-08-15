@@ -1,5 +1,7 @@
 package main.java.plotly;
 
+import static java.util.Arrays.asList;
+
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
@@ -10,6 +12,7 @@ import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 public class ConnectionGet {
 
@@ -38,10 +41,14 @@ public class ConnectionGet {
 			String SelectingFile = "gene_exp.csv";
 			String filename = "plot from api";
 			String plottitle = "a heat map example";
+			// TODO devide the string by "," or " "
+			String selectingColumn = "gene,value_1,value_2";
 			// TODO Extend to other plot type
-			// Now the default plot type is heatmap
+			// Now the default plot type is heatmap, threshold is 50
 			String plottype = "heatmap";
+			double threshold = 50;
 			
+			String fullOutput = "";
 			
 			ConnectionGet conn = new ConnectionGet(un, email, platform);
 			
@@ -52,24 +59,34 @@ public class ConnectionGet {
 			getPara.setFilename(filename);
 			getPara.setPlotType(plottype);
 			getPara.setPlotTitle(plottitle);
+			getPara.setThreshold(threshold);
+			getPara.setSelectingColumns(selectingColumn);
 			
 			// Test 1 -- for new user
 			String urlParameters1 = getPara.getURLParemeters();
 			System.out.println("Testing 1 - Register a new user in plotly");
-			conn.New_User(urlParameters1);
+			fullOutput = conn.New_User(urlParameters1);
 			
 			// Test 2 -- for new plot
 			// TODO selectingColumn from iplant UI
-			getPara.select(SelectingFile, outPutFile /* selectingColumn*/);
+			getPara.select(SelectingFile, outPutFile);
 			String urlParameters2 = getPara.getURLParemeters(SelectingFile, outPutFile);
 			System.out.println("Testing 2 - Send a plot request to plotly");
-			conn.Plot_Data(urlParameters2);
+			fullOutput = conn.Plot_Data(urlParameters2);
+			
+			// TODO Return the msg to the iplant UI
+			Response res = new Response(fullOutput);
+			// Convert String to Json.
+			res.ConvertoJson();
+			System.out.println(res.getURL());
 			
 		}
 		
 		// Register a new user from plotly.
-		private void New_User(String urlParameters) throws Exception{
+		private String New_User(String urlParameters) throws Exception{
 			// Use plotly rest api to request a new user account.
+			String fullOutPut = "";
+			
 			try{
 				// Set up a plotly account with the needed parameters.
 				String url = "https://plot.ly/apimkacct";
@@ -92,7 +109,7 @@ public class ConnectionGet {
 				// TODO if the result is null, throw error
 				
 				// Temp strings to store the reply from plotly.
-				String fullOutPut = "";
+				
 				String oneLine = "";
 				
 				BufferedReader br = new BufferedReader(new InputStreamReader(
@@ -112,36 +129,27 @@ public class ConnectionGet {
 				String api_key = "";
 				// TODO Give values to the above from the returned buffer br which in 
 				// json format. And judge if there are msg or error. 
-				// few places http://json.org/java/, net.sf.json for more places in the backend.
-				
-				System.out.println("Json Msg:" + fullOutPut);
 				
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			return fullOutPut;
 		}
 		
 		// Provide with required parameters to plotly. 
-		private void Plot_Data(String urlParameters) throws Exception{	
-			// TODO Read and determine the rows and columns in file to the url parameters. 
-			
+		private String Plot_Data(String urlParameters) throws Exception{	
 			// User input of a input and temp output file.
 			
-			// Return a series of strings
-			// UserData process = new UserData();
-			//process.select(SelectingFile, outPutFile);
+			String fullOutPut = "";
 			
 			/*
 			 * Seccesfully check return a api based on the parameters
 			 */
 			try{
 				// Set up a plotly account with the needed parameters.
-				String url = "https://plot.ly/clientresp";
-				// TODO separate apart the parameters based on user input. 
-				//String urlParameters1 = "un=david90test&key=5afprolg26&origin=plot&platform=Java&args=[[0, 1, 2], [3, 4, 5], [1, 2, 3], [6, 6, 5]]&kwargs={\"filename\": \"plot from api\",\"fileopt\": \"overwrite\",\"style\": {\"type\": \"bar\"},\"traces\": [1],\"layout\": {\"title\": \"experimental data\"},\"world_readable\": true}";
-				
+				String url = "https://plot.ly/clientresp";				
 				URL obj = new URL(url);
 				// There is a way to install unirest-java with Maven. 
 				// Send post request
@@ -157,10 +165,7 @@ public class ConnectionGet {
 				if(conn.getResponseCode() > 200){
 					throw new RuntimeException("Failed : HTTP error code:" + conn.getResponseCode());
 				}
-				// TODO if the result is null, throw error
 				
-				// Temp strings to store the reply from plotly.
-				String fullOutPut = "";
 				String oneLine = "";
 				
 				BufferedReader br = new BufferedReader(new InputStreamReader(
@@ -178,19 +183,15 @@ public class ConnectionGet {
 				// json format. And judge if there are msg or error. http://json.org/java/
 				
 				// System.out.println("Json Msg:" + fullOutPut);
-				// TODO Return the msg to the iplant UI
-				Response res = new Response(fullOutPut);
-				// Convert String to Json.
-				res.ConvertoJson();
-				System.out.println(res.getURL());
+				
 				
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			/*
-			*/
+			
+			return fullOutPut;
 			
 		}
 }
