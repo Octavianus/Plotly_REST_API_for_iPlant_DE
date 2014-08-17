@@ -35,13 +35,16 @@ public class ConnectionGet {
 			// TODO Extend to other plot type
 			// Now the default plot type is heatmap, threshold is 50
 			String plottype = "heatmap";
+			
 			// Threshold is the sum of all the samples' value.
 			double threshold = 50;
+			boolean publ = true;
 			
 			String fullOutput = "";
 			
 			ConnectionGet conn = new ConnectionGet();
 			
+			// Temporary way to set the data.
 			UserData getPara = new UserData();
 			getPara.setEmail(email);
 			getPara.setUsername(un);
@@ -51,16 +54,21 @@ public class ConnectionGet {
 			getPara.setPlotTitle(plottitle);
 			getPara.setThreshold(threshold);
 			getPara.setSelectingColumns(selectingColumn);
+			getPara.setWorldReadable(publ);
+			
+			// UserData getPara = new UserData(un, email, platform);
+			
+			// UserData getPara = new UserData(String username, String api_key, String platform, String plottype, String plottitle, String filename, boolean publ);
 			
 			// Test 1 -- for new user
-			String urlParameters1 = getPara.getURLParemeters();
+			String urlParameters1 = getPara.getURLParameters();
 			System.out.println("Testing 1 - Register a new user in plotly");
 			fullOutput = conn.New_User(urlParameters1);
 			
 			// Test 2 -- for new plot
 			// TODO selectingColumn from iplant UI
 			getPara.select(SelectingFile, outPutFile);
-			String urlParameters2 = getPara.getURLParemeters(SelectingFile, outPutFile);
+			String urlParameters2 = getPara.getURLParameters(outPutFile);
 			System.out.println("Testing 2 - Send a plot request to plotly");
 			fullOutput = conn.Plot_Data(urlParameters2);
 			

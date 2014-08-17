@@ -24,7 +24,7 @@ public class UserData {
 	// New User
 	private String username = "un=";
 	private String email = "email=";
-	private String platform = "platform=";
+	private String platform = "platform=java";
 	private String tmp_pw = "tmp_pw=";
 	// private String version = "version=0.1";
 	
@@ -40,7 +40,8 @@ public class UserData {
 	private String plottype = "";
 	private String plottitle = "";
 	private String selectingColumns = "";
-		
+	
+	private boolean publ = true;	
 	private List<String> samplesName = asList("sampleNO.1","sampleNO.2");
 	
 	// set the threshold of the raw data.
@@ -55,8 +56,20 @@ public class UserData {
 	public UserData() {
 	}
 	
-	public UserData(String username) {
-		this.username = username;
+	public UserData(String username, String email, String platform) {
+		this.username += username;
+		this.email += email;
+		this.platform += platform;
+	}
+		
+	public UserData(String username, String api_key, String platform, String plottype, String plottitle, String filename, boolean publ) {
+		this.username += username;
+		this.api_key += api_key;
+		this.platform += platform;
+		this.plottype += plottype;
+		this.plottitle += plottitle;
+		this.filename += filename;
+		this.publ = publ;
 	}
 	
 	public void setSelectingFile(String selectingFile){
@@ -151,6 +164,10 @@ public class UserData {
 		this.selectingColumns = selectingColumns;
 	}
 	
+	public void setWorldReadable(boolean publ){
+		this.publ = publ;
+	}
+	
 	/* 
 	 * save the columns which are selecting into a temp file
 	 */
@@ -166,6 +183,10 @@ public class UserData {
 			// parse the user input into list.
 			// The code below splits the string on a delimiter defined as: zero or more whitespace, a literal comma, zero or more whitespace which will place the words into the list and collapse any whitespace between the words and commas.
 			List<String> selectingColumns_List = Arrays.asList(selectingColumns.split("\\s*,\\s*"));
+			
+			// TODO READ from iRODS to the local file system.
+			// iRODSFileReader irodreader = new ...
+			// ...
 			
 			CSVReader reader = new CSVReader(new FileReader(in));
 			CSVWriter writer = new CSVWriter(new FileWriter(out));
@@ -275,7 +296,7 @@ public class UserData {
 	/* 
 	 * Get the url of POST request 
 	 */
-	public String getURLParemeters() throws Exception{
+	public String getURLParameters() throws Exception{
 		String URLParameters = username +"&"+ email +"&"+ platform;
 		return URLParameters;
 	}
@@ -283,7 +304,7 @@ public class UserData {
 	/*
 	 * Overload the for POST plot method 
 	 */
-	public String getURLParemeters(String in, String out) throws Exception{
+	public String getURLParameters(String out) throws Exception{
 		String URLParameters = "";
 		CSVReader reader = new CSVReader( new FileReader(out));
 		List<String[]> rs = reader.readAll();
@@ -354,7 +375,7 @@ public class UserData {
 		args += zdata + xdata + ydata + "\"name\":\"example\",\"type\":\"" + plottype + "\"}]" + "&";
 		kwargs += filename + "\",\"fileopt\":\"overwrite\", \"style\":{\"type\":\"" 
 				+ plottype + "\"},\"layout\":{\"title\":\"" 
-				+ plottitle + "\"},\"world_readable\":true}";
+				+ plottitle + "\"},\"world_readable\":" + publ + "}";
 			
 		//data += xdata + ydata + zdata;
 		
